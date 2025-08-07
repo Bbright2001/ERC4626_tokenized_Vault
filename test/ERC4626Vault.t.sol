@@ -2,23 +2,26 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {ERC4626Vault} from "../src/Counter.sol";
+import {ERC4626Vault} from "../src/ERC4626Vault.sol";
 
-contract CounterTest is Test {
-    Counter public counter;
+contract ERC4626VaultTest is Test {
+    ERC4626Vault public vault;
+    address public depositor;
+    address public admin;
+    address public daiAddr;
 
     function setUp() public {
-        counter = new Counter();
-        counter.setNumber(0);
+        vault = new ERC4626Vault(daiAddr, "BTOKEN", "BTK");
+        depositor = address(0x1);
+        admin = address(this);
+        daiAddr = address(DAI());
     }
 
-    function test_Increment() public {
-        counter.increment();
-        assertEq(counter.number(), 1);
-    }
-
-    function testFuzz_SetNumber(uint256 x) public {
-        counter.setNumber(x);
-        assertEq(counter.number(), x);
+    function test_vaultDeposit() public {
+        vm.deal(daiAddr, depositor, 2e18);
+        vm.prank(depositor);
+        vm.approve(1e18, address(vault));
+        vm.prank(depositor);
+        vault.deposit(10 ether, depositor);
     }
 }

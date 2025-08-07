@@ -38,7 +38,11 @@ Modifier: onlyWhenNotPaused, withinStakingCap
 
 Use library to safely transfer DAI
 
-Mint vault shares to receiver
+  transfer DAI from sender to vault
+    calculate shares to mint
+    mint shares to receiver
+    return shares minted
+
 
 3. withdraw(amount, receiver, owner)
 Modifier: onlyWhenNotPaused
