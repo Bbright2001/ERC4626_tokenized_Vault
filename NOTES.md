@@ -85,7 +85,7 @@ Modifier: onlyOwner
 
 Update the staking limit
 
-🧪 Optional: Testing Utilities
+Testing Utilities
 forceDepositWithoutTransfer() — for mock testing
 
 emergencyWithdraw() — for rescue scenarios

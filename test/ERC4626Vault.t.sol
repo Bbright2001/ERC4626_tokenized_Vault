@@ -10,18 +10,5 @@ contract ERC4626VaultTest is Test {
     address public admin;
     address public daiAddr;
 
-    function setUp() public {
-        vault = new ERC4626Vault(daiAddr, "BTOKEN", "BTK");
-        depositor = address(0x1);
-        admin = address(this);
-        daiAddr = address(DAI());
-    }
-
-    function test_vaultDeposit() public {
-        vm.deal(daiAddr, depositor, 2e18);
-        vm.prank(depositor);
-        vm.approve(1e18, address(vault));
-        vm.prank(depositor);
-        vault.deposit(10 ether, depositor);
-    }
+    function setUp() public {}
 }

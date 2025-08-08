@@ -13,20 +13,22 @@ contract ERC4626Vault is ERC4626 {
     using Math for uint256;
 
     IERC20 public immutable DAI;
-    uint256 public constant stakingCap = 100_000 * 1e18; //100,000 Dai
+    uint256 public stakingCap = 100_000 * 1e18; //100,000 Dai
     bool public isPaused;
     address owner;
 
     error stakingPaused();
     error stakingCapExceeded();
     error onlyOwnerAction();
-    error InvalidTokenAddress();
+    error InvalidAddress();
     error invalidDepositAmount();
     error invalidWithdrawAmount();
+    error invalidAmount();
 
     event deposited(uint256 amount);
     event withdrawSuccessful();
     event redeemed();
+    event minted(uint256 shares);
 
     modifier onlyWhenNotPaused() {
         if (isPaused == true) revert stakingPaused();
@@ -53,7 +55,7 @@ contract ERC4626Vault is ERC4626 {
         name = "BTOKEN";
         symbol = "BTK";
 
-        if (DaiTokenAddress == address(0)) revert InvalidTokenAddress();
+        if (DaiTokenAddress == address(0)) revert InvalidAddress();
 
         DAI = IERC20(DaiTokenAddress);
     }
@@ -70,7 +72,7 @@ contract ERC4626Vault is ERC4626 {
         returns (uint256)
     {
         if (amount <= 0) revert invalidDepositAmount();
-        if (receiver == address(0)) revert InvalidTokenAddress();
+        if (receiver == address(0)) revert InvalidAddress();
         if (amount > DAI.balanceOf(msg.sender)) revert invalidDepositAmount();
         if (amount > DAI.allowance(msg.sender, address(this)))
             revert invalidDepositAmount();
@@ -85,7 +87,7 @@ contract ERC4626Vault is ERC4626 {
         address _owner
     ) public override onlyWhenNotPaused returns (uint256) {
         if (receiver == address(0) || _owner == address(0))
-            revert InvalidTokenAddress();
+            revert InvalidAddress();
         if (amount > super.balanceOf(_owner)) revert invalidWithdrawAmount();
 
         emit withdrawSuccessful();
@@ -97,13 +99,95 @@ contract ERC4626Vault is ERC4626 {
         uint256 shares,
         address receiver
     ) public override onlyWhenNotPaused returns (uint256) {
-        if (receiver == address(0)) revert InvalidTokenAddress();
+        if (receiver == address(0)) revert InvalidAddress();
         if (shares <= 0) revert invalidDepositAmount();
         if (shares > DAI.balanceOf(msg.sender)) revert invalidDepositAmount();
         if (shares > DAI.allowance(msg.sender, address(this)))
             revert invalidDepositAmount();
 
-        emit redeemed();
+        emit minted(shares);
         return super.mint(shares, receiver);
+    }
+
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address _owner
+    ) public override onlyWhenNotPaused returns (uint256) {
+        if (receiver == address(0)) revert InvalidAddress();
+        if (shares <= 0) revert invalidAmount();
+
+        emit redeemed();
+
+        return super.redeem(shares, receiver, _owner);
+    }
+
+    //VIEW FUNCTIONS
+    function totalAssets() public view override returns (uint256) {
+        return super.totalAssets();
+    }
+
+    function previewWithdraw(
+        uint256 DaiAsset
+    ) public view override returns (uint256) {
+        return super.previewWithdraw(DaiAsset);
+    }
+
+    function previewDeposit(
+        uint256 DaiAsset
+    ) public view override returns (uint256) {
+        return super.previewDeposit(DaiAsset);
+    }
+
+    function previewMint(
+        uint256 shares
+    ) public view override returns (uint256) {
+        return super.previewMint(shares);
+    }
+
+    function previewRedeem(
+        uint256 shares
+    ) public view override returns (uint256) {
+        return super.previewRedeem(shares);
+    }
+
+    //ADMIN FUNCTIONS
+    function pauseVault() public onlyOwner {
+        isPaused = true;
+    }
+
+    function unpauseVault() public onlyOwner {
+        isPaused = false;
+    }
+
+    function setOwner(address newOwner) public onlyOwner {
+        if (newOwner == address(0)) revert InvalidAddress();
+        owner = newOwner;
+    }
+
+    function transferOwnership(address newOwner) public onlyOwner {
+        if (newOwner == address(0)) revert InvalidAddress();
+        owner = newOwner;
+    }
+
+    function emergencyWithdraw() public onlyOwner {
+        uint256 balance = DAI.balanceOf(address(this));
+        if (balance > 0) {
+            DAI.safeTransfer(owner, balance);
+            emit withdrawSuccessful();
+        }
+    }
+
+    function emergencyRedeem() public onlyOwner {
+        uint256 shares = super.balanceOf(address(this));
+        if (shares > 0) {
+            super.redeem(shares, owner, address(this));
+            emit redeemed();
+        }
+    }
+
+    function setStakingCap(uint256 newCap) public onlyOwner {
+        if (newCap <= 0) revert invalidAmount();
+        stakingCap = newCap;
     }
 }
