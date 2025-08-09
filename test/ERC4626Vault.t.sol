@@ -39,4 +39,12 @@ contract ERC4626VaultTest is Test {
         assertEq(mockDai.balanceOf(address(vault)), 200 * 1e18);
         vm.stopPrank();
     }
+
+    function test_withdraw() public {
+        vm.startPrank(depositor);
+        mockDai.approve(address(vault), 1000 * 1e18);
+        vault.deposit(300 * 1e18, depositor);
+        vault.withdraw(200 * 1e18, depositor, depositor);
+        assertEq(mockDai.balanceOf(address(vault)), 100 * 1e18);
+    }
 }
