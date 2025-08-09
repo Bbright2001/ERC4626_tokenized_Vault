@@ -49,10 +49,12 @@ contract ERC4626Vault is ERC4626 {
 
     constructor(address DaiTokenAddress, string memory name, string memory symbol)
         ERC4626(IERC20(DaiTokenAddress))
-        ERC20("BTOKEN", "BTK")
+        ERC20(name, symbol)
     {
         owner = msg.sender;
 
+        symbol = "BTK";
+        name = "BTOKEN";
         if (DaiTokenAddress == address(0)) revert InvalidAddress();
 
         DAI = IERC20(DaiTokenAddress);

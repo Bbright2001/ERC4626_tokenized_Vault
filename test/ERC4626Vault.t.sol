@@ -24,5 +24,19 @@ contract ERC4626VaultTest is Test {
         vault = new ERC4626Vault(address(mockDai), "TestVaultToken", "TVT");
         depositor = address(0x1);
         admin = address(this);
+
+        mockDai.mint(depositor, 1000 * 1e18);
+    }
+
+    function test_deposit() public {
+        vm.startPrank(depositor);
+        console.log(vault.balanceOf(depositor));
+        console.log("MockDai balance: ", mockDai.balanceOf(depositor));
+        mockDai.approve(address(vault), 1000 * 1e18);
+        assertEq(mockDai.allowance(depositor, address(vault)), 1000 * 1e18);
+        vault.deposit(200 * 1e18, depositor);
+        assertEq(vault.balanceOf(depositor), 200 * 1e18);
+        assertEq(mockDai.balanceOf(address(vault)), 200 * 1e18);
+        vm.stopPrank();
     }
 }
