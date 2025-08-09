@@ -25,5 +25,4 @@ contract ERC4626VaultTest is Test {
         depositor = address(0x1);
         admin = address(this);
     }
-    
 }
