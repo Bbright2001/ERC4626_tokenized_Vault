@@ -34,9 +34,11 @@ contract ERC4626Vault is ERC4626 {
         if (isPaused == true) revert stakingPaused();
         _;
     }
+
     modifier withinStakingCap(uint256 amount) {
-        if (super.totalAssets() + amount > stakingCap)
+        if (super.totalAssets() + amount > stakingCap) {
             revert stakingCapExceeded();
+        }
         _;
     }
 
@@ -45,15 +47,11 @@ contract ERC4626Vault is ERC4626 {
         _;
     }
 
-    constructor(
-        address DaiTokenAddress,
-        string memory name,
-        string memory symbol
-    ) ERC4626(IERC20(DaiTokenAddress)) ERC20(name, symbol) {
+    constructor(address DaiTokenAddress, string memory name, string memory symbol)
+        ERC4626(IERC20(DaiTokenAddress))
+        ERC20("BTOKEN", "BTK")
+    {
         owner = msg.sender;
-
-        name = "BTOKEN";
-        symbol = "BTK";
 
         if (DaiTokenAddress == address(0)) revert InvalidAddress();
 
@@ -61,10 +59,7 @@ contract ERC4626Vault is ERC4626 {
     }
 
     // core functions
-    function deposit(
-        uint amount,
-        address receiver
-    )
+    function deposit(uint256 amount, address receiver)
         public
         override
         onlyWhenNotPaused
@@ -74,20 +69,23 @@ contract ERC4626Vault is ERC4626 {
         if (amount <= 0) revert invalidDepositAmount();
         if (receiver == address(0)) revert InvalidAddress();
         if (amount > DAI.balanceOf(msg.sender)) revert invalidDepositAmount();
-        if (amount > DAI.allowance(msg.sender, address(this)))
+        if (amount > DAI.allowance(msg.sender, address(this))) {
             revert invalidDepositAmount();
+        }
 
         emit deposited(amount);
         return super.deposit(amount, receiver);
     }
 
-    function withdraw(
-        uint amount,
-        address receiver,
-        address _owner
-    ) public override onlyWhenNotPaused returns (uint256) {
-        if (receiver == address(0) || _owner == address(0))
+    function withdraw(uint256 amount, address receiver, address _owner)
+        public
+        override
+        onlyWhenNotPaused
+        returns (uint256)
+    {
+        if (receiver == address(0) || _owner == address(0)) {
             revert InvalidAddress();
+        }
         if (amount > super.balanceOf(_owner)) revert invalidWithdrawAmount();
 
         emit withdrawSuccessful();
@@ -95,25 +93,24 @@ contract ERC4626Vault is ERC4626 {
         return super.withdraw(amount, receiver, _owner);
     }
 
-    function mint(
-        uint256 shares,
-        address receiver
-    ) public override onlyWhenNotPaused returns (uint256) {
+    function mint(uint256 shares, address receiver) public override onlyWhenNotPaused returns (uint256) {
         if (receiver == address(0)) revert InvalidAddress();
         if (shares <= 0) revert invalidDepositAmount();
         if (shares > DAI.balanceOf(msg.sender)) revert invalidDepositAmount();
-        if (shares > DAI.allowance(msg.sender, address(this)))
+        if (shares > DAI.allowance(msg.sender, address(this))) {
             revert invalidDepositAmount();
+        }
 
         emit minted(shares);
         return super.mint(shares, receiver);
     }
 
-    function redeem(
-        uint256 shares,
-        address receiver,
-        address _owner
-    ) public override onlyWhenNotPaused returns (uint256) {
+    function redeem(uint256 shares, address receiver, address _owner)
+        public
+        override
+        onlyWhenNotPaused
+        returns (uint256)
+    {
         if (receiver == address(0)) revert InvalidAddress();
         if (shares <= 0) revert invalidAmount();
 
@@ -127,27 +124,19 @@ contract ERC4626Vault is ERC4626 {
         return super.totalAssets();
     }
 
-    function previewWithdraw(
-        uint256 DaiAsset
-    ) public view override returns (uint256) {
+    function previewWithdraw(uint256 DaiAsset) public view override returns (uint256) {
         return super.previewWithdraw(DaiAsset);
     }
 
-    function previewDeposit(
-        uint256 DaiAsset
-    ) public view override returns (uint256) {
+    function previewDeposit(uint256 DaiAsset) public view override returns (uint256) {
         return super.previewDeposit(DaiAsset);
     }
 
-    function previewMint(
-        uint256 shares
-    ) public view override returns (uint256) {
+    function previewMint(uint256 shares) public view override returns (uint256) {
         return super.previewMint(shares);
     }
 
-    function previewRedeem(
-        uint256 shares
-    ) public view override returns (uint256) {
+    function previewRedeem(uint256 shares) public view override returns (uint256) {
         return super.previewRedeem(shares);
     }
 
